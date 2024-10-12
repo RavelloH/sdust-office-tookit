@@ -4,6 +4,25 @@ const docx = require("docx");
 const fs = require("fs");
 const path = require("path");
 const xlsx = require("node-xlsx");
+const docxPdf = require('docx-pdf');
+const { exit } = require("process");
+
+// docx转pdf函数
+function wordToPdf(filePath) {
+  const outputPdfPath = path.join(
+      path.dirname(filePath), 
+      `${path.basename(filePath, path.extname(filePath))}.pdf`
+  );
+
+  docxPdf(filePath, outputPdfPath, (err, result) => {
+      if (err) {
+          rlog.log('Error during conversion:', err);
+      } else {
+          rlog.log('PDF file created successfully:', `${path.basename(filePath, path.extname(filePath))}.pdf`);
+      }
+  });
+}
+
 
 rlog.info("Start reading xlsx files...");
 
@@ -20,45 +39,31 @@ const config = [
 let week = 5;
 
 // week转换为中文
-function weekToChinese(week) {
-  let result = "";
-  switch (week) {
-    case 1:
-      result = "一";
-      break;
-    case 2:
-      result = "二";
-      break;
-    case 3:
-      result = "三";
-      break;
-    case 4:
-      result = "四";
-      break;
-    case 5:
-      result = "五";
-      break;
-    case 6:
-      result = "六";
-      break;
-    case 7:
-      result = "七";
-      break;
-    case 8:
-      result = "八";
-      break;
-    case 9:
-      result = "九";
-      break;
-    case 10:
-      result = "十";
-      break;
-    default:
-      throw new Error("weekToChinese: week is out of range");
-      break;
+function weekToChinese(num) {
+  const chineseDigits = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+  const chineseUnits = ['十', '百', '千', '万'];
+
+  if (num === 0) return chineseDigits[0];
+
+  let result = '';
+  const digits = String(num).split('').map(Number);
+
+  for (let i = 0; i < digits.length; i++) {
+      const digit = digits[i];
+      const unitIndex = digits.length - 2 - i;
+
+      if (digit !== 0) {
+          result += chineseDigits[digit];
+          if (unitIndex >= 0) result += chineseUnits[unitIndex];
+      } else {
+          if (!result.endsWith(chineseDigits[0])) result += chineseDigits[0];
+      }
   }
-  return result;
+
+  return result.replace(/零+$/, '').replace(/零+/g, '零');
 }
+
+
 week = weekToChinese(week);
 
 rlog.log("week:", week);
@@ -92,6 +97,11 @@ const files = fs.readdirSync(__dirname);
 const xlsxFiles = files.filter((file) => path.extname(file) === ".xlsx");
 
 // 读取xlsx文档
+if (xlsxFiles.length === 0) {
+  rlog.error("No xlsx files found in the current directory");
+  return;
+  exit();
+}
 let data = xlsx.parse(path.join(__dirname, xlsxFiles[0]));
 
 // 筛选年级
@@ -142,11 +152,8 @@ function getNums(result, week) {
     } else {
       item[5] = " ";
     }
-
-    // console.log(item);
     return item;
   });
-  // console.log(dbData);
   fs.writeFileSync(path.join(__dirname, "db.json"), JSON.stringify(dbData));
   rlog.success("db.json has been saved");
   return result;
@@ -341,10 +348,5 @@ for (let i = 0; i < config.length; i++) {
       `docx file ${config[i].grade}级第${week}周.docx has been saved`
     );
     // wordToPdf(`${config[i].grade}级第${week}周.docx`);
-    // rlog.success(
-    //   `pdf file ${config[i].grade}级第${week}周.docx.pdf has been saved
-    //   `
-    // );
   });
-  // console.log(result);
 }

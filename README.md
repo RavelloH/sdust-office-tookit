@@ -2,7 +2,7 @@
 
 ## 安装
 ```
-npm i rlog-js docx node-xlsx
+npm i
 ```
 
 ## 使用
