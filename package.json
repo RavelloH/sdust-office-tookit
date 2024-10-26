@@ -1,7 +1,6 @@
 {
   "dependencies": {
     "docx": "^8.5.0",
-    "docx-pdf": "^0.0.1",
     "node-xlsx": "^0.24.0",
     "rlog-js": "^1.4.0"
   }
