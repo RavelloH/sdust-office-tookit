@@ -180,7 +180,7 @@ function getNums(result, week) {
     }
     return item;
   });
-  fs.writeFileSync(path.join(__dirname, "db.json"), JSON.stringify(dbData));
+  fs.writeFileSync(path.join(__dirname, "db.json"), JSON.stringify(dbData,null,"  "));
   rlog.success("db.json has been saved");
   return result;
 }
